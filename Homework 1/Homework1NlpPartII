@@ -1,0 +1,311 @@
+# Sulbha Aggarwal
+# Homework 1, Part II: Check Report.pdf for explanation
+
+import math
+
+# Variable to store training data with padding and lower case for temporary purposes
+cleaned_train = ""
+
+# Variable to store test data with padding and lower case for temporary purposes
+cleaned_test = ""
+
+# unigram maximum likelihood model
+train_dict = dict()
+
+# bigram maximum likelihood model (will also be used for add-one)
+test_dict = dict()
+
+# Reads the input file and initializes the dictionary
+def wordMapper(str):
+    counts = dict()
+    words= str.split()
+
+    for word in words:
+        if word in counts:
+            counts[word] +=1
+        else:
+            counts[word] =1
+
+    return counts
+
+# Reads corpus file, then create modified input file by lower case with pad symbols
+def addPadding( inFile ):
+    if inFile == "train.txt":
+        global cleaned_train
+    else:
+        global cleaned_test
+
+    outFile = open("clean_" + inFile, "w", encoding="utf8")
+
+    inputFile = open(inFile, 'r', encoding="utf-8")
+    Lines = inputFile.readlines()
+
+    addLines = ""
+    for line in Lines:
+        line = (line.rstrip()).lower()
+        line1 = "<s> " + line + " </s>\n"
+        addLines = addLines + line1;
+
+    outFile.writelines(addLines)
+    outFile.close()
+
+    if inFile == "train.txt":
+        cleaned_train = addLines
+    else:
+        cleaned_test= addLines
+
+# Add the <unk> to train dictionary by removing the keys occuring only once
+def addUnk(wordTypeDic):
+    count = 0
+    wordTypeDic["<unk>"] = 0
+
+    outputFile = open("processed-train.txt" , "w", encoding="utf8")
+    with open( "clean_train.txt", 'r', encoding='utf-8') as inputFile:
+        for line in inputFile:
+            for word in line.split():
+                if( wordTypeDic.get(word) == 1 ):
+                    outputFile.write(" <unk>")
+                    wordTypeDic["<unk>"] += 1
+                    del wordTypeDic[word]
+                else:
+                    if( word != "<s>"):
+                        outputFile.write(" " + word)
+                    else:
+                        outputFile.write( word )
+                    if (word == "</s>"):
+                        outputFile.write( "\n" )
+    outputFile.close()
+
+# Add the <unk> to test dictionary by removing the keys that do not occur in the train dictionary
+def addUnktest( wordTypeDic ):
+    outputFile = open( "processed-test.txt", "w", encoding="utf8" )
+
+    with open( "clean_test.txt" , "r" , encoding="utf8") as inFile:
+        for line in inFile:
+            for word in line.split():
+                if word not in wordTypeDic:
+                    outputFile.write(" <unk>")
+                else:
+                    if (word != "<s>"):
+                        outputFile.write(" " + word)
+                    else:
+                        outputFile.write(word)
+                    if (word == "</s>"):
+                        outputFile.write("\n")
+
+    outputFile.close()
+
+# Reads the input file and initializes the bigram dictionary
+def bigramWordCount(inFile, wordTypeDic):
+    with open(inFile, "r", encoding="utf8") as inputFile:
+        for line in inputFile:
+            line = line.lower()
+            lineList = line.split()
+            for i in range(len(lineList) - 1):
+                wordTuple = (lineList[i], lineList[i + 1])
+                if wordTuple not in wordTypeDic:
+                    wordTypeDic[wordTuple] = 1
+                else:
+                    wordTypeDic[wordTuple] += 1
+
+# For Question 4, to get the percentages
+def biagramNotInTrain( wordTypeDic , wordTestDic ):
+    perType = 0
+    perToken = 0
+
+    for tuple in wordTestDic:
+        if tuple not in wordTypeDic:
+            perToken += wordTestDic[tuple]
+            perType += 1
+
+    print("% of bigram tokens in the test corpus did not occur in training : " , '%.3f'%((perToken/sum(wordTestDic.values()))*100)  , "%")
+    print("% of bigram types in the test corpus did not occur in training : " , '%.3f'%(perType/len(wordTestDic)*100) , "%" )
+
+# unigram probability w/ parameters
+def logUnigram(sentence, wordTypeDic):
+    prob = 0.0
+    a = False
+    for word in sentence.split():
+        if word != "<s>":
+            if word not in wordTypeDic:
+                print(word, " has undefined log probability.")
+                a = True
+            if not a:
+                print(word, ":  ", '%.3f'% (math.log(wordTypeDic[word] / wordTokens , 2)) )
+                prob += math.log(wordTypeDic[word] / wordTokens , 2)
+    return prob
+
+# bigram probability w/ parameters
+def logBrigram(sentence, biagramTypeDic, wordTypeDic ):
+    lineList = sentence.split()
+    prob = 0.0
+    a = False
+
+    for i in range(len(lineList) - 1):
+        tuple = (lineList[i], lineList[i+1])
+        if tuple not in biagramTypeDic:
+            print(tuple, " has undefined log probability.")
+            a = True
+            prob = 0
+        if not a:
+            print(tuple, ":  ", '%.3f'% (math.log(biagramTypeDic[tuple] / wordTypeDic[lineList[i]], 2)))
+            prob += math.log(biagramTypeDic[tuple] / wordTypeDic[lineList[i]], 2)
+    return prob
+
+# bigram add-one probability w/ parameters
+def logBiagramAddOne( sentence, biagramTypeDic, wordTypeDic ):
+    lineList = sentence.split()
+    prob = 0.0
+
+    for i in range(len(lineList) - 1):
+        tuple = (lineList[i], lineList[i + 1])
+        if tuple not in biagramTypeDic:
+            print(tuple, ":  ", '%.3f' % (math.log( 1.0 / (wordTypeDic[lineList[i]] + wordTypes ) , 2)), "%")
+            prob += math.log( 1.0 / (wordTypeDic[lineList[i]] + wordTypes ) , 2)
+        else:
+            print(tuple, ":  ", '%.3f' % (math.log( (biagramTypeDic[tuple] + 1.0) / (wordTypeDic[lineList[i]] + wordTypes ), 2)))
+            prob += math.log( (biagramTypeDic[tuple] + 1.0) / (wordTypeDic[lineList[i]] + wordTypes ), 2)
+    return prob
+
+# Question 6 calculate and add all the unigram log probability
+def logUnigram6( sentences, wordTypeDic ):
+    prob = 0.0
+    logProb  = 0.0
+
+    for line in sentences.split("<end>"):
+        for word in line.split():
+            if word != "<s>":
+                if word not in wordTypeDic:
+                    return "undefined"
+                else:
+                    prob += math.log(wordTypeDic[word] / wordTokens , 2)
+        logProb += prob
+        return logProb
+
+# Question 6 calculate and add all the bigram log probability
+def logBigram6(sentences, wordTypeDic, biagramTypeDic):
+    lineList = sentence.split()
+    prob = 0.0
+    logProb = 0.0
+
+    for line in sentences.split("<end>"):
+        for i in range(len(lineList) - 1):
+            tuple = (lineList[i], lineList[i + 1])
+            if tuple not in biagramTypeDic:
+                return "undefined"
+            else:
+                prob += math.log(biagramTypeDic[tuple] / wordTypeDic[lineList[i]], 2)
+        logProb += prob
+    return logProb
+
+# Question 6 calculate and add all the bigram add-one smoothing log probability
+def logBiagramAddOne6( sentences, wordTypeDic, biagramTypeDic ):
+    lineList = sentences.split()
+    prob = 0.0
+    logProb = 0.0
+
+    for line in sentences.split("<end>"):
+        for i in range(len(lineList) - 1):
+            tuple = (lineList[i], lineList[i + 1])
+            if tuple not in biagramTypeDic:
+                prob += math.log(1.0 / (wordTypeDic[lineList[i]] + wordTypes), 2)
+            else:
+                prob += math.log((biagramTypeDic[tuple] + 1.0) / (wordTypeDic[lineList[i]] + wordTypes), 2)
+        logProb += prob
+    return prob
+
+# procedure to solve perplexity of a given sentence/corpus
+def perplexity( model , sentences , wordTypeDic , biagramTypeDic):
+    M = 0
+    l = 0
+
+    for words in sentences.split():
+        M += 1
+
+    if model == "unigram" :
+        unigram = logUnigram6( sentences, wordTypeDic)
+        if unigram == "undefined" :
+            return "undefined"
+        else:
+            l = (1.0/(M-1)) * unigram
+            print( "l for unigram is: " , l )
+    elif model == "bigram":
+        if logBigram6(sentences, wordTypeDic, biagramTypeDic) == "undefined":
+            return ( "undefined" )
+        else:
+            l = (1.0 / M) * logBigram6(sentences, wordTypeDic, biagramTypeDic)
+            print( "l for Bigram is: " , l )
+    else:
+        if logBiagramAddOne6(sentences, wordTypeDic, biagramTypeDic) == " undefined ":
+            return "undefined"
+        else:
+            l = (1.0 / M) * logBiagramAddOne6(sentences, wordTypeDic, biagramTypeDic)
+            print( "l for Bigram Add-One Smoothing is: " , l )
+
+    return '%.3f'%(math.pow(2,-1*l))
+
+# Questions and calling of the functions
+
+# First Question 3
+addPadding( "train.txt" )
+addPadding( "test.txt" )
+
+train_dict = wordMapper(cleaned_train)
+test_dict = wordMapper(cleaned_test)
+
+neverOccured = {k: test_dict[k] for k in set(test_dict) - set(train_dict)}
+
+answer= ( sum(neverOccured.values()) / sum(test_dict.values()) )
+answer= answer*100
+# print(answer, "% of word tokens")
+
+c=0
+for key in test_dict.keys():
+    if not key in train_dict:
+        c += 1
+
+# print((c/len(test_dict)*100) , "%")
+print( 'Question 3:\n% of Word Tokens in the test corpus did not occur in training: ' , '%.3f'%answer , "%" ,
+        "\n% of Word Types in the test corpus did not occur in training: " , '%.3f'%(c/len(test_dict)*100) , "%" )
+
+# Question 1 and 2
+addUnk(train_dict)
+wordTypes = len(train_dict)
+wordTokens = sum(train_dict.values())
+print( "\nQuestion1:\nNumber of word types in the training corpus: " , wordTypes )
+print( "\nQuestion2:\nNumber of word tokens in the training corpus: " , wordTokens )
+
+# Question 4 and furthur on:
+addUnktest( train_dict )
+
+biagramWordType = {}
+bigramWordCount( "processed-train.txt" ,  biagramWordType )
+biagramTestType = {}
+bigramWordCount( "processed-test.txt" ,  biagramTestType )
+
+print( "\nQuestion4:" )
+biagramNotInTrain(biagramWordType , biagramTestType)
+
+print( "\nQuestion5:" )
+sentence = "<s> i look forward to hearing your reply . </s>"
+print( "Log Probability of Unigram: " , logUnigram(sentence, train_dict) , "\n" )
+
+print( "Log Probability of Bigram: " , logBrigram(sentence, biagramWordType, train_dict ) , "\n" )
+print( "Log Probability of Bigram Add-One Smoothing: " , logBiagramAddOne( sentence, biagramWordType, train_dict ) )
+
+print( "\nQuestion6:" )
+print( "Perplexity under Unigram model: " , perplexity( "unigram", sentence , train_dict , biagramWordType ) )
+print( "Perplexity under Bigram model: " , perplexity( "bigram" , sentence , train_dict , biagramWordType ) )
+print( "Perplexity under Add-one Smoothing model: " , perplexity( "bigram Add-one Smoothing" , sentence , train_dict , biagramWordType ) )
+
+corpus = ""
+with open("processed-test.txt", "r",encoding="utf8") as file:
+    for line in file:
+        line = line.replace("<\s>", "<\s> <end>")
+        corpus +=line
+
+print( "\nQuestion7:" )
+print( "Perplexity under Unigram model: " , perplexity( "unigram", corpus , train_dict , biagramWordType ) )
+print( "Perplexity under Bigram model: " , perplexity( "bigram" , corpus , train_dict , biagramWordType ) )
+print( "Perplexity under Add-one Smoothing model: " , perplexity( "bigram Add-one Smoothing" , corpus , train_dict , biagramWordType ) )
+

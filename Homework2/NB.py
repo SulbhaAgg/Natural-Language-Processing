@@ -1,28 +1,21 @@
 import os
+import json
 
 
-def reviewsIntoFile(mainFolder , fileName ):
-    outFile = open( fileName , "w", encoding="utf8")
-    for subdirs in os.listdir(mainFolder):
-         folder = os.path.join(mainFolder, subdirs)
-         for filename in os.listdir(folder):
-            temp1 = os.path.join(folder, filename)
-            inputFile = open(temp1, 'r', encoding= 'utf-8')
-            Lines = inputFile.readlines()
-            for line in Lines:
-                if subdirs == "neg":
-                    outFile.write( "neg " + line + "\n")
-                else:
-                    outFile.write("pos " + line + "\n")
+def bagOfWords( trainData , testData , classes ):
+    processedFeatureVectors = open( "movie-review-test.NB", 'r', encoding="utf8")
+    for line in processedFeatureVectors.readlines():
+        vector = json.loads(line)
+        trainData.append(vector)
+        word = list(vector.keys())[0]
+        if word in classes:
+            classes[word].append(vector[word])
+        else:
+            classes[word]  = [vector[word]]
+    processedFeatureVectors.close()
 
-            inputFile.close()
-    outFile.close()
+trainData = []
+testData = {}
+classes = {}
 
-mainFolder = "movie-review-HW2/aclImdb/test"
-reviewsIntoFile(mainFolder , "testReviews" )
-
-mainFolder = "movie-review-HW2/aclImdb/train"
-reviewsIntoFile(mainFolder , "trainReviews" )
-
-
-
+bagOfWords( trainData , testData , classes )

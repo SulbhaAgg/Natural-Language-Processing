@@ -1,0 +1,2 @@
+{"comedy": {"fly": 1, "shoot": 1, "love": 1, "fast": 1}}
+{"action": {"fly": 1, "shoot": 1, "love": 1, "fast": 1}}

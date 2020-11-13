@@ -1,0 +1,18 @@
+Log probability of each label:
+{'comedy': -1.3219280948873622, 'action': -0.7369655941662062}
+
+Log likelihood of each word: 
+P(love | comedy) = -2.415037499278844
+P(fly | comedy) = -3.0
+P(furious | comedy) = -4.0
+P(couple | comedy) = -2.415037499278844
+P(fun | comedy) = -2.0
+P(fast | comedy) = -3.0
+P(shoot | comedy) = -4.0
+P(love | action) = -3.1699250014423126
+P(fly | action) = -3.1699250014423126
+P(furious | action) = -2.584962500721156
+P(couple | action) = -4.169925001442312
+P(fun | action) = -3.1699250014423126
+P(fast | action) = -2.584962500721156
+P(shoot | action) = -1.84799690655495

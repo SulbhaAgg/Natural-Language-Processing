@@ -1,0 +1,12 @@
+Document # 	 Predicted Label 	 Actual Label
+	1					 Predicted Class: action				 Actual Class: comedy
+	2					 Predicted Class: action				 Actual Class: action
+
+
+ Total Reviews: 2
+ Documents Predicted Correctly: 1
+ Documents Predicted Incorrectly: 1
+ Accuracy: 50.0%
+
+ Label Probability:  Action: -0.7369655941662062
+ Comedy: -1.3219280948873622
